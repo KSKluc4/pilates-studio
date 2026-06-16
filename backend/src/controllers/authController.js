@@ -1,6 +1,9 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 
+// This email is always provisioned as an active admin the first time it signs in via Google.
+const PRIMARY_ADMIN_EMAIL = "priscillacwb@gmail.com";
+
 async function login(req, res, next) {
   try {
     const { email, password } = req.body;
@@ -118,14 +121,16 @@ async function googleAuth(req, res, next) {
       throw new Error("Name and email are required");
     }
 
-    let user = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase();
+    let user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
+      const isPrimaryAdmin = normalizedEmail === PRIMARY_ADMIN_EMAIL;
       user = await User.create({
         name,
         email,
-        role: "recepcionista",
-        status: "pending",
+        role: isPrimaryAdmin ? "admin" : "recepcionista",
+        status: isPrimaryAdmin ? "active" : "pending",
         provider: "google",
       });
     }

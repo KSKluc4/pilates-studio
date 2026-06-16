@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const { PRIMARY_ADMIN_EMAIL } = require("../utils/protectedAccounts");
 
 async function listUsers(req, res, next) {
   try {
@@ -25,6 +26,11 @@ async function approveUser(req, res, next) {
     if (!user) {
       res.status(404);
       throw new Error("User not found");
+    }
+
+    if (user.email === PRIMARY_ADMIN_EMAIL) {
+      res.status(403);
+      throw new Error("This account's role cannot be changed");
     }
 
     user.status = "active";
@@ -54,6 +60,11 @@ async function deleteUser(req, res, next) {
     if (!user) {
       res.status(404);
       throw new Error("User not found");
+    }
+
+    if (user.email === PRIMARY_ADMIN_EMAIL) {
+      res.status(403);
+      throw new Error("This account cannot be removed");
     }
 
     await user.deleteOne();

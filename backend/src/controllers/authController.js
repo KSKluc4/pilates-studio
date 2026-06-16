@@ -1,8 +1,6 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
-
-// This email is always provisioned as an active admin the first time it signs in via Google.
-const PRIMARY_ADMIN_EMAIL = "priscillacwb@gmail.com";
+const { PRIMARY_ADMIN_EMAIL } = require("../utils/protectedAccounts");
 
 async function login(req, res, next) {
   try {

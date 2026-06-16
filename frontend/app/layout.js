@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Estúdio Vitá - Pilates e Fisioterapia",
+  title: "Pilates Studio Management System",
   description: "Sistema de gestão para estúdios de pilates",
 };
 

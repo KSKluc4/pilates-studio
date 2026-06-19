@@ -4,10 +4,8 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.use(protect, authorize("admin"));
-
-router.get("/", listEquipment);
-router.post("/", createEquipment);
-router.delete("/:id", deleteEquipment);
+router.get("/", protect, authorize("admin", "recepcionista"), listEquipment);
+router.post("/", protect, authorize("admin"), createEquipment);
+router.delete("/:id", protect, authorize("admin"), deleteEquipment);
 
 module.exports = router;

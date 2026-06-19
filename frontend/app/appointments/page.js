@@ -61,6 +61,37 @@ const EQ_COLORS = {
   Barrel: { bg: "#457b9d", text: "#fff" },
 };
 
+function EquipmentSelect({ current, slotTaken, equipmentList, onChange }) {
+  const available = equipmentList.filter((eq) => eq === current || !slotTaken.includes(eq));
+  return (
+    <select
+      value={current || ""}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        fontSize: "0.82rem",
+        padding: "0.2rem 0.5rem",
+        borderRadius: "6px",
+        border: "1px solid var(--border)",
+        background: "var(--surface)",
+        cursor: "pointer",
+        color: "var(--text-primary)",
+        minWidth: "8rem",
+      }}
+    >
+      {!current && (
+        <option value="" disabled>
+          — selecionar —
+        </option>
+      )}
+      {available.map((eq) => (
+        <option key={eq} value={eq}>
+          {eq}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function EquipmentBadge({ name }) {
   const c = EQ_COLORS[name] || { bg: "#d8eee1", text: "#1b1b1b" };
   return (
@@ -89,6 +120,7 @@ function AppointmentsContent() {
   // crud
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [equipmentList, setEquipmentList] = useState([]);
   const [form, setForm] = useState({ patient: "", date: "", durationMinutes: 60, notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -106,12 +138,14 @@ function AppointmentsContent() {
 
   async function loadCrud() {
     try {
-      const [appts, pats] = await Promise.all([
+      const [appts, pats, eqs] = await Promise.all([
         api.get("/appointments", token),
         api.get("/patients", token),
+        api.get("/equipment", token),
       ]);
       setAppointments(appts);
       setPatients(pats);
+      setEquipmentList(eqs.map((e) => e.name));
     } catch (err) {
       setError(err.message);
     }
@@ -174,6 +208,21 @@ function AppointmentsContent() {
       await api.put(`/appointments/${id}`, { status }, token);
       await loadCrud();
       setScheduleKey((k) => k + 1);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleEquipmentChange(appointmentId, newEquipment) {
+    try {
+      await api.put(`/appointments/${appointmentId}`, { equipment: newEquipment }, token);
+      setDaySchedule((prev) =>
+        prev.map((item) =>
+          item.appointmentId === appointmentId
+            ? { ...item, equipment: newEquipment, manualEquipment: true }
+            : item
+        )
+      );
     } catch (err) {
       setError(err.message);
     }
@@ -305,24 +354,28 @@ function AppointmentsContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {daySchedule.map((item) => (
-                    <tr key={item.appointmentId}>
-                      <td style={{ whiteSpace: "nowrap" }}>{formatTime(item.date)}</td>
-                      <td>{item.patientName}</td>
-                      <td>
-                        {item.noEquipmentAvailable ? (
-                          <span style={{ color: "var(--danger)", fontSize: "0.78rem", fontWeight: 700 }}>
-                            Sem equipamento disponível
-                          </span>
-                        ) : (
-                          <EquipmentBadge name={item.equipment} />
-                        )}
-                      </td>
-                      <td style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                        {statusLabel(item.status)}
-                      </td>
-                    </tr>
-                  ))}
+                  {daySchedule.map((item) => {
+                    const slotTaken = daySchedule
+                      .filter((o) => o.appointmentId !== item.appointmentId && o.date === item.date && o.equipment)
+                      .map((o) => o.equipment);
+                    return (
+                      <tr key={item.appointmentId}>
+                        <td style={{ whiteSpace: "nowrap" }}>{formatTime(item.date)}</td>
+                        <td>{item.patientName}</td>
+                        <td>
+                          <EquipmentSelect
+                            current={item.equipment}
+                            slotTaken={slotTaken}
+                            equipmentList={equipmentList}
+                            onChange={(eq) => handleEquipmentChange(item.appointmentId, eq)}
+                          />
+                        </td>
+                        <td style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                          {statusLabel(item.status)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}

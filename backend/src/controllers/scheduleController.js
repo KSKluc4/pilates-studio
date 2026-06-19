@@ -84,6 +84,7 @@ async function buildDaySchedule(targetDate, equipmentList) {
         date: appt.date,
         status: appt.status,
         equipment: appt.equipment || null,
+        manualEquipment: appt.manualEquipment || false,
         noEquipmentAvailable: overflowPatients.has(appt.patient._id.toString()),
       });
     }

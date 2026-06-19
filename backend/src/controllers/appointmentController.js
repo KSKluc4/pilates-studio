@@ -82,7 +82,7 @@ async function createAppointment(req, res, next) {
 
 async function updateAppointment(req, res, next) {
   try {
-    const { date, durationMinutes, status, notes } = req.body;
+    const { date, durationMinutes, status, notes, equipment } = req.body;
 
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
@@ -101,6 +101,10 @@ async function updateAppointment(req, res, next) {
     if (durationMinutes !== undefined) appointment.durationMinutes = durationMinutes;
     if (status !== undefined) appointment.status = status;
     if (notes !== undefined) appointment.notes = notes;
+    if (equipment !== undefined) {
+      appointment.equipment = equipment;
+      appointment.manualEquipment = true;
+    }
 
     await appointment.save();
 

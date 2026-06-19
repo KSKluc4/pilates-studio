@@ -29,6 +29,10 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    manualEquipment: {
+      type: Boolean,
+      default: false,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

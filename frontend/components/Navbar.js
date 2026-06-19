@@ -52,6 +52,11 @@ export default function Navbar() {
                 Usuários
               </Link>
             )}
+            {user.role === "admin" && (
+              <Link href="/equipment" onClick={closeMenu}>
+                Equipamentos
+              </Link>
+            )}
           </nav>
           <div className="navbar__user">
             <span>

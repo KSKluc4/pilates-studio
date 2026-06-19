@@ -1,7 +1,20 @@
 const Appointment = require("../models/Appointment");
+const Equipment = require("../models/Equipment");
 const { assignEquipmentsToSlot } = require("../utils/equipmentRotation");
 
-async function buildDaySchedule(targetDate) {
+const DEFAULT_EQUIPMENT = ["Cadillac", "Reformer", "Chair 1", "Chair 2", "Barrel"];
+
+async function getEquipmentNames() {
+  const docs = await Equipment.find().sort({ name: 1 }).select("name");
+  if (docs.length === 0) {
+    // Auto-seed defaults if the collection is empty (backward compatibility)
+    await Equipment.insertMany(DEFAULT_EQUIPMENT.map((name) => ({ name })));
+    return DEFAULT_EQUIPMENT;
+  }
+  return docs.map((d) => d.name);
+}
+
+async function buildDaySchedule(targetDate, equipmentList) {
   const startOfDay = new Date(
     targetDate.getFullYear(),
     targetDate.getMonth(),
@@ -50,7 +63,7 @@ async function buildDaySchedule(targetDate) {
         lastEquipment: lastEquipmentMap.get(a.patient._id.toString()),
       }));
 
-      const assignedMap = assignEquipmentsToSlot(entries, preTaken);
+      const assignedMap = assignEquipmentsToSlot(entries, equipmentList, preTaken);
 
       for (const appt of needsAssignment) {
         const eq = assignedMap.get(appt.patient._id.toString());
@@ -88,7 +101,8 @@ function parseDateParam(str) {
 
 async function getTodaySchedule(req, res, next) {
   try {
-    res.json(await buildDaySchedule(new Date()));
+    const equipmentList = await getEquipmentNames();
+    res.json(await buildDaySchedule(new Date(), equipmentList));
   } catch (error) {
     next(error);
   }
@@ -101,7 +115,8 @@ async function getScheduleByDate(req, res, next) {
       res.status(400);
       throw new Error("Use o formato YYYY-MM-DD.");
     }
-    res.json(await buildDaySchedule(target));
+    const equipmentList = await getEquipmentNames();
+    res.json(await buildDaySchedule(target, equipmentList));
   } catch (error) {
     next(error);
   }
@@ -115,6 +130,9 @@ async function getWeekSchedule(req, res, next) {
       throw new Error("Use o formato YYYY-MM-DD.");
     }
 
+    // Fetch once for the whole week to avoid 7 DB round-trips
+    const equipmentList = await getEquipmentNames();
+
     const dow = ref.getDay();
     const monday = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate() + (dow === 0 ? -6 : 1 - dow));
 
@@ -122,7 +140,7 @@ async function getWeekSchedule(req, res, next) {
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
       const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      week.push({ date: iso, appointments: await buildDaySchedule(d) });
+      week.push({ date: iso, appointments: await buildDaySchedule(d, equipmentList) });
     }
 
     res.json(week);

@@ -9,6 +9,7 @@ const appointmentRoutes = require("./routes/appointmentRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const userRoutes = require("./routes/userRoutes");
+const equipmentRoutes = require("./routes/equipmentRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -39,6 +40,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/equipment", equipmentRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

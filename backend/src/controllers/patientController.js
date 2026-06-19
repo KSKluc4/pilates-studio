@@ -1,4 +1,5 @@
 const Patient = require("../models/Patient");
+const Appointment = require("../models/Appointment");
 
 async function listPatients(req, res, next) {
   try {
@@ -90,10 +91,33 @@ async function deletePatient(req, res, next) {
   }
 }
 
+async function getEquipmentHistory(req, res, next) {
+  try {
+    const patient = await Patient.findById(req.params.id).select("name");
+    if (!patient) {
+      res.status(404);
+      throw new Error("Patient not found");
+    }
+
+    const history = await Appointment.find({
+      patient: req.params.id,
+      status: "completed",
+      equipment: { $exists: true, $ne: null },
+    })
+      .sort({ date: -1 })
+      .select("date equipment notes durationMinutes");
+
+    res.json({ patient, history });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   listPatients,
   getPatient,
   createPatient,
   updatePatient,
   deletePatient,
+  getEquipmentHistory,
 };

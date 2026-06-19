@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "../../context/AuthContext";
@@ -116,9 +117,18 @@ function PatientsContent() {
               <td>{p.email || "-"}</td>
               <td>{p.active ? "Ativo" : "Inativo"}</td>
               <td>
-                <button className="btn btn--danger" onClick={() => handleDelete(p._id)}>
-                  Remover
-                </button>
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "nowrap" }}>
+                  <Link
+                    href={`/patients/${p._id}/history`}
+                    className="btn btn--ghost"
+                    style={{ fontSize: "0.8rem", padding: "0.4rem 0.9rem" }}
+                  >
+                    Histórico
+                  </Link>
+                  <button className="btn btn--danger" onClick={() => handleDelete(p._id)}>
+                    Remover
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

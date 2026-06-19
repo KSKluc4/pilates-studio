@@ -18,7 +18,18 @@ export default function Navbar() {
     <header className="navbar">
       <div className="navbar__row">
         <Link href="/dashboard" className="navbar__brand" onClick={closeMenu}>
-          <img src="/logo.png" alt="" style={{ height: "32px", width: "auto" }} />
+          <img
+            src="/logo.png"
+            alt=""
+            style={{
+              display: "block",
+              height: "56px",
+              width: "auto",
+              border: "none",
+              boxShadow: "none",
+              borderRadius: 0,
+            }}
+          />
           Estúdio Vit
         </Link>
 

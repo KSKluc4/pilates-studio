@@ -71,8 +71,15 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   position: relative;
+}
+
+.navbar__brand img {
+  display: block;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .navbar__brand {

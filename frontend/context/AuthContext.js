@@ -26,7 +26,9 @@ export function AuthProvider({ children }) {
         setToken(storedToken);
       })
       .catch(() => {
-        localStorage.removeItem("token");
+        // api.js already handles 401 (clears token + redirects to login).
+        // On network failures we intentionally keep the token so the user
+        // isn't logged out just because the server was temporarily unreachable.
       })
       .finally(() => setLoading(false));
   }, []);

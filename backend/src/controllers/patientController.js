@@ -1,6 +1,8 @@
 const Patient = require("../models/Patient");
 const Appointment = require("../models/Appointment");
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 async function listPatients(req, res, next) {
   try {
     const { search } = req.query;
@@ -20,7 +22,7 @@ async function getPatient(req, res, next) {
     const patient = await Patient.findById(req.params.id);
     if (!patient) {
       res.status(404);
-      throw new Error("Patient not found");
+      throw new Error("Paciente não encontrado.");
     }
     res.json(patient);
   } catch (error) {
@@ -34,7 +36,12 @@ async function createPatient(req, res, next) {
 
     if (!name || !phone) {
       res.status(400);
-      throw new Error("Name and phone are required");
+      throw new Error("Nome e telefone são obrigatórios.");
+    }
+
+    if (email && !EMAIL_REGEX.test(email)) {
+      res.status(400);
+      throw new Error("Formato de email inválido.");
     }
 
     const patient = await Patient.create({
@@ -56,10 +63,15 @@ async function updatePatient(req, res, next) {
   try {
     const { name, email, phone, birthDate, medicalNotes, active } = req.body;
 
+    if (email && !EMAIL_REGEX.test(email)) {
+      res.status(400);
+      throw new Error("Formato de email inválido.");
+    }
+
     const patient = await Patient.findById(req.params.id);
     if (!patient) {
       res.status(404);
-      throw new Error("Patient not found");
+      throw new Error("Paciente não encontrado.");
     }
 
     if (name !== undefined) patient.name = name;
@@ -81,11 +93,11 @@ async function deletePatient(req, res, next) {
     const patient = await Patient.findById(req.params.id);
     if (!patient) {
       res.status(404);
-      throw new Error("Patient not found");
+      throw new Error("Paciente não encontrado.");
     }
 
     await patient.deleteOne();
-    res.json({ message: "Patient deleted" });
+    res.json({ message: "Paciente removido com sucesso." });
   } catch (error) {
     next(error);
   }
@@ -96,7 +108,7 @@ async function getEquipmentHistory(req, res, next) {
     const patient = await Patient.findById(req.params.id).select("name");
     if (!patient) {
       res.status(404);
-      throw new Error("Patient not found");
+      throw new Error("Paciente não encontrado.");
     }
 
     const history = await Appointment.find({

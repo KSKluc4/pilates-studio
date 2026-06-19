@@ -6,7 +6,7 @@ async function protect(req, res, next) {
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     res.status(401);
-    return next(new Error("Not authorized, no token provided"));
+    return next(new Error("Não autorizado. Token não fornecido."));
   }
 
   try {
@@ -16,14 +16,14 @@ async function protect(req, res, next) {
     const user = await User.findById(decoded.id);
     if (!user) {
       res.status(401);
-      return next(new Error("Not authorized, user no longer exists"));
+      return next(new Error("Não autorizado. Usuário não encontrado."));
     }
 
     req.user = user;
     next();
-  } catch (error) {
+  } catch {
     res.status(401);
-    next(new Error("Not authorized, invalid or expired token"));
+    next(new Error("Não autorizado. Token inválido ou expirado."));
   }
 }
 
@@ -31,7 +31,7 @@ function authorize(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
       res.status(403);
-      return next(new Error("Forbidden: insufficient permissions"));
+      return next(new Error("Acesso negado. Permissões insuficientes."));
     }
     next();
   };

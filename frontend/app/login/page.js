@@ -10,11 +10,20 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [sessionMessage, setSessionMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [googleMessage, setGoogleMessage] = useState("");
   const { login, loginWithToken } = useAuth();
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    const msg = sessionStorage.getItem("sessionMessage");
+    if (msg) {
+      setSessionMessage(msg);
+      sessionStorage.removeItem("sessionMessage");
+    }
+  }, []);
 
   useEffect(() => {
     if (sessionStatus !== "authenticated" || !session) return;
@@ -48,6 +57,23 @@ export default function LoginPage() {
         <div className="login-card__logo">P</div>
         <h1>Pilates Studio</h1>
         <p>Entre com sua conta para continuar.</p>
+
+        {sessionMessage && (
+          <p
+            style={{
+              background: "var(--highlight)",
+              color: "var(--primary-dark)",
+              borderRadius: "8px",
+              padding: "0.6rem 0.9rem",
+              fontSize: "0.88rem",
+              fontWeight: 600,
+              marginTop: "0.75rem",
+            }}
+          >
+            {sessionMessage}
+          </p>
+        )}
+
         <form className="form" onSubmit={handleSubmit}>
           <label>
             Email

@@ -310,7 +310,13 @@ function AppointmentsContent() {
                       <td style={{ whiteSpace: "nowrap" }}>{formatTime(item.date)}</td>
                       <td>{item.patientName}</td>
                       <td>
-                        <EquipmentBadge name={item.equipment} />
+                        {item.noEquipmentAvailable ? (
+                          <span style={{ color: "var(--danger)", fontSize: "0.78rem", fontWeight: 700 }}>
+                            Sem equipamento disponível
+                          </span>
+                        ) : (
+                          <EquipmentBadge name={item.equipment} />
+                        )}
                       </td>
                       <td style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
                         {statusLabel(item.status)}
@@ -451,7 +457,13 @@ function AppointmentsContent() {
                                 </td>
                                 <td style={{ fontSize: "0.83rem" }}>{item.patientName}</td>
                                 <td>
-                                  <EquipmentBadge name={item.equipment} />
+                                  {item.noEquipmentAvailable ? (
+                                    <span style={{ color: "var(--danger)", fontSize: "0.75rem", fontWeight: 700 }}>
+                                      Sem equipamento
+                                    </span>
+                                  ) : (
+                                    <EquipmentBadge name={item.equipment} />
+                                  )}
                                 </td>
                               </tr>
                             ))}

@@ -8,18 +8,18 @@ async function login(req, res, next) {
 
     if (!email || !password) {
       res.status(400);
-      throw new Error("Email and password are required");
+      throw new Error("Email e senha são obrigatórios.");
     }
 
     const user = await User.findOne({ email: email.toLowerCase() }).select("+password");
     if (!user || !(await user.comparePassword(password))) {
       res.status(401);
-      throw new Error("Invalid email or password");
+      throw new Error("Email ou senha incorretos.");
     }
 
     if (user.status !== "active") {
       res.status(403);
-      throw new Error("Sua conta ainda está pendente de aprovação por um administrador");
+      throw new Error("Sua conta ainda está pendente de aprovação por um administrador.");
     }
 
     const token = generateToken(user);
@@ -45,13 +45,13 @@ async function register(req, res, next) {
 
     if (!name || !email || !password) {
       res.status(400);
-      throw new Error("Name, email and password are required");
+      throw new Error("Nome, email e senha são obrigatórios.");
     }
 
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
       res.status(409);
-      throw new Error("A user with this email already exists");
+      throw new Error("Já existe um usuário com este email.");
     }
 
     const user = await User.create({
@@ -82,13 +82,13 @@ async function signup(req, res, next) {
 
     if (!name || !email || !password) {
       res.status(400);
-      throw new Error("Name, email and password are required");
+      throw new Error("Nome, email e senha são obrigatórios.");
     }
 
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
       res.status(409);
-      throw new Error("A user with this email already exists");
+      throw new Error("Já existe um usuário com este email.");
     }
 
     await User.create({
@@ -116,7 +116,7 @@ async function googleAuth(req, res, next) {
 
     if (!name || !email) {
       res.status(400);
-      throw new Error("Name and email are required");
+      throw new Error("Nome e email são obrigatórios.");
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -135,7 +135,7 @@ async function googleAuth(req, res, next) {
 
     if (user.status !== "active") {
       return res.status(403).json({
-        message: "Sua conta ainda está pendente de aprovação por um administrador",
+        message: "Sua conta ainda está pendente de aprovação por um administrador.",
         pending: true,
       });
     }

@@ -32,7 +32,7 @@ async function getAppointment(req, res, next) {
     );
     if (!appointment) {
       res.status(404);
-      throw new Error("Appointment not found");
+      throw new Error("Agendamento não encontrado.");
     }
     res.json(appointment);
   } catch (error) {
@@ -46,18 +46,29 @@ async function createAppointment(req, res, next) {
 
     if (!patient || !date) {
       res.status(400);
-      throw new Error("Patient and date are required");
+      throw new Error("Paciente e data são obrigatórios.");
     }
 
-    const patientExists = await Patient.findById(patient);
-    if (!patientExists) {
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
+      res.status(400);
+      throw new Error("Data inválida.");
+    }
+
+    const patientDoc = await Patient.findById(patient);
+    if (!patientDoc) {
       res.status(404);
-      throw new Error("Patient not found");
+      throw new Error("Paciente não encontrado.");
+    }
+
+    if (!patientDoc.active) {
+      res.status(400);
+      throw new Error("Não é possível agendar para um paciente inativo.");
     }
 
     const appointment = await Appointment.create({
       patient,
-      date,
+      date: parsedDate,
       durationMinutes,
       notes,
       createdBy: req.user._id,
@@ -76,10 +87,17 @@ async function updateAppointment(req, res, next) {
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
       res.status(404);
-      throw new Error("Appointment not found");
+      throw new Error("Agendamento não encontrado.");
     }
 
-    if (date !== undefined) appointment.date = date;
+    if (date !== undefined) {
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        res.status(400);
+        throw new Error("Data inválida.");
+      }
+      appointment.date = parsedDate;
+    }
     if (durationMinutes !== undefined) appointment.durationMinutes = durationMinutes;
     if (status !== undefined) appointment.status = status;
     if (notes !== undefined) appointment.notes = notes;
@@ -97,11 +115,11 @@ async function deleteAppointment(req, res, next) {
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
       res.status(404);
-      throw new Error("Appointment not found");
+      throw new Error("Agendamento não encontrado.");
     }
 
     await appointment.deleteOne();
-    res.json({ message: "Appointment deleted" });
+    res.json({ message: "Agendamento removido com sucesso." });
   } catch (error) {
     next(error);
   }

@@ -24,7 +24,7 @@ async function getPayment(req, res, next) {
     const payment = await Payment.findById(req.params.id).populate("patient", "name");
     if (!payment) {
       res.status(404);
-      throw new Error("Payment not found");
+      throw new Error("Pagamento não encontrado.");
     }
     res.json(payment);
   } catch (error) {
@@ -38,18 +38,24 @@ async function createPayment(req, res, next) {
 
     if (!patient || amount === undefined || !method) {
       res.status(400);
-      throw new Error("Patient, amount and method are required");
+      throw new Error("Paciente, valor e forma de pagamento são obrigatórios.");
+    }
+
+    const numericAmount = Number(amount);
+    if (isNaN(numericAmount) || numericAmount < 0) {
+      res.status(400);
+      throw new Error("O valor deve ser um número maior ou igual a zero.");
     }
 
     const patientExists = await Patient.findById(patient);
     if (!patientExists) {
       res.status(404);
-      throw new Error("Patient not found");
+      throw new Error("Paciente não encontrado.");
     }
 
     const payment = await Payment.create({
       patient,
-      amount,
+      amount: numericAmount,
       method,
       status,
       referenceMonth,
@@ -71,10 +77,17 @@ async function updatePayment(req, res, next) {
     const payment = await Payment.findById(req.params.id);
     if (!payment) {
       res.status(404);
-      throw new Error("Payment not found");
+      throw new Error("Pagamento não encontrado.");
     }
 
-    if (amount !== undefined) payment.amount = amount;
+    if (amount !== undefined) {
+      const numericAmount = Number(amount);
+      if (isNaN(numericAmount) || numericAmount < 0) {
+        res.status(400);
+        throw new Error("O valor deve ser um número maior ou igual a zero.");
+      }
+      payment.amount = numericAmount;
+    }
     if (method !== undefined) payment.method = method;
     if (status !== undefined) payment.status = status;
     if (referenceMonth !== undefined) payment.referenceMonth = referenceMonth;
@@ -93,11 +106,11 @@ async function deletePayment(req, res, next) {
     const payment = await Payment.findById(req.params.id);
     if (!payment) {
       res.status(404);
-      throw new Error("Payment not found");
+      throw new Error("Pagamento não encontrado.");
     }
 
     await payment.deleteOne();
-    res.json({ message: "Payment deleted" });
+    res.json({ message: "Pagamento removido com sucesso." });
   } catch (error) {
     next(error);
   }

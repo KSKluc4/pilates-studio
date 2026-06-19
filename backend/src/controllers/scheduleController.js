@@ -41,6 +41,7 @@ async function buildDaySchedule(targetDate) {
   for (const slotAppointments of slots.values()) {
     const alreadyAssigned = slotAppointments.filter((a) => a.equipment);
     const needsAssignment = slotAppointments.filter((a) => !a.equipment);
+    const overflowPatients = new Set();
 
     if (needsAssignment.length > 0) {
       const preTaken = new Set(alreadyAssigned.map((a) => a.equipment));
@@ -56,6 +57,8 @@ async function buildDaySchedule(targetDate) {
         if (eq) {
           appt.equipment = eq;
           await appt.save();
+        } else {
+          overflowPatients.add(appt.patient._id.toString());
         }
       }
     }
@@ -68,6 +71,7 @@ async function buildDaySchedule(targetDate) {
         date: appt.date,
         status: appt.status,
         equipment: appt.equipment || null,
+        noEquipmentAvailable: overflowPatients.has(appt.patient._id.toString()),
       });
     }
   }
@@ -95,7 +99,7 @@ async function getScheduleByDate(req, res, next) {
     const target = parseDateParam(req.params.date);
     if (!target) {
       res.status(400);
-      throw new Error("Use o formato YYYY-MM-DD");
+      throw new Error("Use o formato YYYY-MM-DD.");
     }
     res.json(await buildDaySchedule(target));
   } catch (error) {
@@ -108,10 +112,9 @@ async function getWeekSchedule(req, res, next) {
     const ref = req.query.date ? parseDateParam(req.query.date) : new Date();
     if (!ref) {
       res.status(400);
-      throw new Error("Use o formato YYYY-MM-DD");
+      throw new Error("Use o formato YYYY-MM-DD.");
     }
 
-    // Monday of the week containing ref
     const dow = ref.getDay();
     const monday = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate() + (dow === 0 ? -6 : 1 - dow));
 

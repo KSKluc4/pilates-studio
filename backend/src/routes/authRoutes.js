@@ -8,7 +8,7 @@ const router = express.Router();
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: { message: "Too many login attempts, please try again later" },
+  message: { message: "Muitas tentativas de login. Tente novamente em 15 minutos." },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -16,7 +16,15 @@ const loginLimiter = rateLimit({
 const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
-  message: { message: "Too many signup attempts, please try again later" },
+  message: { message: "Muitas tentativas de cadastro. Tente novamente mais tarde." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { message: "Muitas tentativas. Tente novamente mais tarde." },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -26,14 +34,14 @@ function internalOnly(req, res, next) {
   const secret = req.headers["x-internal-secret"];
   if (!secret || secret !== process.env.INTERNAL_API_SECRET) {
     res.status(401);
-    return next(new Error("Unauthorized"));
+    return next(new Error("Não autorizado."));
   }
   next();
 }
 
 router.post("/login", loginLimiter, login);
 router.post("/signup", signupLimiter, signup);
-router.post("/register", protect, authorize("admin"), register);
+router.post("/register", registerLimiter, protect, authorize("admin"), register);
 router.post("/google", internalOnly, googleAuth);
 router.get("/me", protect, getMe);
 

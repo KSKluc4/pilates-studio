@@ -1,8 +1,5 @@
 const Appointment = require("../models/Appointment");
 const Patient = require("../models/Patient");
-const { nextIndex } = require("../utils/equipmentRotation");
-
-const FINAL_STATUSES = ["completed", "no-show"];
 
 async function listAppointments(req, res, next) {
   try {
@@ -82,24 +79,12 @@ async function updateAppointment(req, res, next) {
       throw new Error("Appointment not found");
     }
 
-    const wasFinal = FINAL_STATUSES.includes(appointment.status);
-    const willBeFinal = status !== undefined && FINAL_STATUSES.includes(status);
-
     if (date !== undefined) appointment.date = date;
     if (durationMinutes !== undefined) appointment.durationMinutes = durationMinutes;
     if (status !== undefined) appointment.status = status;
     if (notes !== undefined) appointment.notes = notes;
 
     await appointment.save();
-
-    // Attendance confirmed or missed: advance the patient to the next equipment in the rotation
-    if (!wasFinal && willBeFinal) {
-      const patient = await Patient.findById(appointment.patient);
-      if (patient) {
-        patient.equipmentIndex = nextIndex(patient.equipmentIndex || 0);
-        await patient.save();
-      }
-    }
 
     res.json(appointment);
   } catch (error) {

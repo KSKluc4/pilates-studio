@@ -28,13 +28,6 @@ const patientSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    // Position in the fixed equipment rotation: 0=Cadillac, 1=Reformer, 2=Chair, 3=Barrel
-    equipmentIndex: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 3,
-    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -25,6 +25,10 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    equipment: {
+      type: String,
+      default: null,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

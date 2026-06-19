@@ -1,9 +1,6 @@
 const Appointment = require("../models/Appointment");
-const { EQUIPMENT_SEQUENCE, getEquipmentName, nextIndex } = require("../utils/equipmentRotation");
+const { assignEquipmentsToSlot } = require("../utils/equipmentRotation");
 
-// Resolves the designated equipment for every appointment of the day, advancing
-// past a patient's preferred slot when another patient at the same time already
-// claimed that equipment.
 async function getTodaySchedule(req, res, next) {
   try {
     const now = new Date();
@@ -13,41 +10,66 @@ async function getTodaySchedule(req, res, next) {
     const appointments = await Appointment.find({
       date: { $gte: startOfDay, $lt: endOfDay },
     })
-      .populate("patient", "name equipmentIndex")
+      .populate("patient", "name")
       .sort({ date: 1 });
 
+    // Group by time slot
     const slots = new Map();
-    for (const appointment of appointments) {
-      const key = appointment.date.getTime();
+    for (const appt of appointments) {
+      const key = appt.date.getTime();
       if (!slots.has(key)) slots.set(key, []);
-      slots.get(key).push(appointment);
+      slots.get(key).push(appt);
+    }
+
+    // Collect unique patient IDs to look up last-used equipment in one pass
+    const patientIds = [...new Set(appointments.map((a) => a.patient._id.toString()))];
+
+    const lastEquipmentMap = new Map();
+    for (const pid of patientIds) {
+      const lastCompleted = await Appointment.findOne({
+        patient: pid,
+        status: "completed",
+        date: { $lt: startOfDay },
+        equipment: { $exists: true, $ne: null },
+      }).sort({ date: -1 });
+
+      lastEquipmentMap.set(pid, lastCompleted ? lastCompleted.equipment : null);
     }
 
     const result = [];
 
     for (const slotAppointments of slots.values()) {
-      const usedInSlot = new Set();
+      // Keep already-assigned appointments as-is; only assign the new ones
+      const alreadyAssigned = slotAppointments.filter((a) => a.equipment);
+      const needsAssignment = slotAppointments.filter((a) => !a.equipment);
 
-      for (const appointment of slotAppointments) {
-        let index = appointment.patient.equipmentIndex || 0;
-        let equipment = getEquipmentName(index);
-        let attempts = 0;
+      if (needsAssignment.length > 0) {
+        const preTaken = new Set(alreadyAssigned.map((a) => a.equipment));
 
-        while (usedInSlot.has(equipment) && attempts < EQUIPMENT_SEQUENCE.length) {
-          index = nextIndex(index);
-          equipment = getEquipmentName(index);
-          attempts += 1;
+        const entries = needsAssignment.map((a) => ({
+          patientId: a.patient._id,
+          lastEquipment: lastEquipmentMap.get(a.patient._id.toString()),
+        }));
+
+        const assignedMap = assignEquipmentsToSlot(entries, preTaken);
+
+        for (const appt of needsAssignment) {
+          const eq = assignedMap.get(appt.patient._id.toString());
+          if (eq) {
+            appt.equipment = eq;
+            await appt.save();
+          }
         }
+      }
 
-        usedInSlot.add(equipment);
-
+      for (const appt of slotAppointments) {
         result.push({
-          appointmentId: appointment._id,
-          patientId: appointment.patient._id,
-          patientName: appointment.patient.name,
-          date: appointment.date,
-          status: appointment.status,
-          equipment,
+          appointmentId: appt._id,
+          patientId: appt.patient._id,
+          patientName: appt.patient.name,
+          date: appt.date,
+          status: appt.status,
+          equipment: appt.equipment || null,
         });
       }
     }

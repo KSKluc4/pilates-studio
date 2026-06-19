@@ -18,7 +18,8 @@ export default function Navbar() {
     <header className="navbar">
       <div className="navbar__row">
         <Link href="/dashboard" className="navbar__brand" onClick={closeMenu}>
-          Pilates Studio
+          <img src="/logo.png" alt="" style={{ height: "32px", width: "auto" }} />
+          Estúdio Vit
         </Link>
 
         <button

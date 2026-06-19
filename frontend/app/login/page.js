@@ -55,7 +55,7 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="card login-card">
         <div className="login-card__logo">P</div>
-        <h1>Pilates Studio</h1>
+        <h1>Estúdio Vit</h1>
         <p>Entre com sua conta para continuar.</p>
 
         {sessionMessage && (

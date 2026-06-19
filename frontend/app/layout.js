@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Pilates Studio Management System",
+  title: "Estúdio Vit",
   description: "Sistema de gestão para estúdios de pilates",
 };
 

@@ -76,10 +76,13 @@ p {
 }
 
 .navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 1.4rem;
-  color: var(--primary);
+  color: #2d6a4f;
 }
 
 .navbar__toggle {

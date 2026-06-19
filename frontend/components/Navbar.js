@@ -44,6 +44,9 @@ export default function Navbar() {
             <Link href="/appointments" onClick={closeMenu}>
               Agendamentos
             </Link>
+            <Link href="/payments" onClick={closeMenu}>
+              Pagamentos
+            </Link>
             {user.role === "admin" && (
               <Link href="/users" onClick={closeMenu}>
                 Usuários

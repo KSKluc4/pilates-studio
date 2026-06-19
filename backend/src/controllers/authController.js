@@ -1,6 +1,11 @@
+const crypto = require("crypto");
+const { Resend } = require("resend");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 const { PRIMARY_ADMIN_EMAIL } = require("../utils/protectedAccounts");
+
+const SAFE_RESET_MESSAGE =
+  "Se o email estiver cadastrado, você receberá um link de recuperação em breve.";
 
 async function login(req, res, next) {
   try {
@@ -165,4 +170,102 @@ async function getMe(req, res) {
   });
 }
 
-module.exports = { login, register, signup, googleAuth, getMe };
+async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400);
+      throw new Error("Email é obrigatório.");
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Always respond with the safe message — never reveal whether email exists.
+    // We also skip Google-only accounts (they have no local password to reset).
+    if (!user || user.provider === "google") {
+      return res.json({ message: SAFE_RESET_MESSAGE });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+        to: user.email,
+        subject: "Recuperação de senha — Estúdio Vit",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+            <h2 style="color:#2d6a4f">Estúdio Vit</h2>
+            <p>Olá, <strong>${user.name}</strong>!</p>
+            <p>Recebemos uma solicitação para redefinir a senha da sua conta. Clique no botão abaixo para criar uma nova senha:</p>
+            <p style="margin:1.5rem 0">
+              <a href="${resetUrl}"
+                 style="background:#2d6a4f;color:#fff;padding:0.75rem 1.5rem;border-radius:8px;text-decoration:none;font-weight:600">
+                Redefinir senha
+              </a>
+            </p>
+            <p style="color:#555;font-size:0.9rem">Este link expira em <strong>1 hora</strong>.</p>
+            <p style="color:#555;font-size:0.9rem">Se você não solicitou isso, ignore este email — sua senha não será alterada.</p>
+            <hr style="border:none;border-top:1px solid #d8eee1;margin:1.5rem 0"/>
+            <p style="color:#aaa;font-size:0.8rem">Estúdio Vit · Sistema de gestão</p>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Erro ao enviar email de recuperação:", emailError.message);
+      // Don't block the response — log the failure but still return the safe message
+    }
+
+    res.json({ message: SAFE_RESET_MESSAGE });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function resetPassword(req, res, next) {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      res.status(400);
+      throw new Error("Token e nova senha são obrigatórios.");
+    }
+
+    if (password.length < 6) {
+      res.status(400);
+      throw new Error("A senha deve ter pelo menos 6 caracteres.");
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: new Date() },
+    }).select("+password +resetPasswordToken +resetPasswordExpires");
+
+    if (!user) {
+      res.status(400);
+      throw new Error("Link de recuperação inválido ou expirado. Solicite um novo.");
+    }
+
+    user.password = password; // pre-save hook handles bcrypt hashing
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Senha atualizada com sucesso. Faça login com a nova senha." });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { login, register, signup, googleAuth, getMe, forgotPassword, resetPassword };

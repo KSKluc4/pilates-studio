@@ -94,6 +94,11 @@ export default function LoginPage() {
             />
           </label>
           {error && <p className="error-text">{error}</p>}
+          <div style={{ textAlign: "right", marginTop: "-0.25rem" }}>
+            <Link href="/forgot-password" style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+              Esqueci minha senha
+            </Link>
+          </div>
           <button type="submit" className="btn btn--primary" disabled={submitting}>
             {submitting ? "Entrando..." : "Entrar"}
           </button>

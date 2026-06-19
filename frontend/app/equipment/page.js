@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import ProtectedRoute from "../../../components/ProtectedRoute";
-import { useAuth } from "../../../context/AuthContext";
-import { api } from "../../../lib/api";
+import ProtectedRoute from "../../components/ProtectedRoute";
+import { useAuth } from "../../context/AuthContext";
+import { api } from "../../lib/api";
 
 function EquipmentContent() {
   const { user, token } = useAuth();

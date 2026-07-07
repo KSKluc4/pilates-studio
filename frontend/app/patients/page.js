@@ -99,41 +99,73 @@ function PatientsContent() {
         </form>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Telefone</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {patients.map((p) => (
-            <tr key={p._id}>
-              <td>{p.name}</td>
-              <td>{p.phone}</td>
-              <td>{p.email || "-"}</td>
-              <td>{p.active ? "Ativo" : "Inativo"}</td>
-              <td>
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "nowrap" }}>
-                  <Link
-                    href={`/patients/${p._id}/history`}
-                    className="btn btn--ghost"
-                    style={{ fontSize: "0.8rem", padding: "0.4rem 0.9rem" }}
-                  >
-                    Histórico
-                  </Link>
-                  <button className="btn btn--danger" onClick={() => handleDelete(p._id)}>
-                    Remover
-                  </button>
-                </div>
-              </td>
+      {/* Tabela — visível em telas médias e grandes */}
+      <div className="desktop-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Telefone</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {patients.map((p) => (
+              <tr key={p._id}>
+                <td>{p.name}</td>
+                <td>{p.phone}</td>
+                <td>{p.email || "-"}</td>
+                <td>{p.active ? "Ativo" : "Inativo"}</td>
+                <td>
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "nowrap" }}>
+                    <Link
+                      href={`/patients/${p._id}/history`}
+                      className="btn btn--ghost"
+                      style={{ fontSize: "0.8rem", padding: "0.4rem 0.9rem" }}
+                    >
+                      Histórico
+                    </Link>
+                    <button className="btn btn--danger" onClick={() => handleDelete(p._id)}>
+                      Remover
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Cards — visíveis apenas no mobile */}
+      <div className="mobile-cards">
+        {patients.map((p) => (
+          <div key={p._id} className="mobile-card">
+            <div className="mobile-card__title">{p.name}</div>
+            <div className="mobile-card__field">
+              <span className="mobile-card__label">Telefone:</span>
+              <span>{p.phone}</span>
+            </div>
+            <div className="mobile-card__field">
+              <span className="mobile-card__label">Email:</span>
+              <span>{p.email || "-"}</span>
+            </div>
+            <div className="mobile-card__field">
+              <span className="mobile-card__label">Status:</span>
+              <span>{p.active ? "Ativo" : "Inativo"}</span>
+            </div>
+            <div className="mobile-card__actions">
+              <Link href={`/patients/${p._id}/history`} className="btn btn--ghost">
+                Histórico
+              </Link>
+              <button className="btn btn--danger" onClick={() => handleDelete(p._id)}>
+                Remover
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

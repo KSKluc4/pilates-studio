@@ -61,7 +61,7 @@ const EQ_COLORS = {
   Barrel: { bg: "#457b9d", text: "#fff" },
 };
 
-function EquipmentSelect({ current, slotTaken, equipmentList, onChange }) {
+function EquipmentSelect({ current, slotTaken, equipmentList, onChange, selectStyle }) {
   const available = equipmentList.filter((eq) => eq === current || !slotTaken.includes(eq));
   return (
     <select
@@ -76,6 +76,7 @@ function EquipmentSelect({ current, slotTaken, equipmentList, onChange }) {
         cursor: "pointer",
         color: "var(--text-primary)",
         minWidth: "8rem",
+        ...selectStyle,
       }}
     >
       {!current && (
@@ -344,40 +345,85 @@ function AppointmentsContent() {
                 Nenhuma aula agendada para este dia.
               </p>
             ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Horário</th>
-                    <th>Paciente</th>
-                    <th>Equipamento</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {daySchedule.map((item) => {
-                    const slotTaken = daySchedule
-                      .filter((o) => o.appointmentId !== item.appointmentId && o.date === item.date && o.equipment)
-                      .map((o) => o.equipment);
-                    return (
-                      <tr key={item.appointmentId}>
-                        <td style={{ whiteSpace: "nowrap" }}>{formatTime(item.date)}</td>
-                        <td>{item.patientName}</td>
-                        <td>
-                          <EquipmentSelect
-                            current={item.equipment}
-                            slotTaken={slotTaken}
-                            equipmentList={equipmentList}
-                            onChange={(eq) => handleEquipmentChange(item.appointmentId, eq)}
-                          />
-                        </td>
-                        <td style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                          {statusLabel(item.status)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <>
+              {/* Tabela — desktop */}
+              <div className="desktop-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Horário</th>
+                      <th>Paciente</th>
+                      <th>Equipamento</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {daySchedule.map((item) => {
+                      const slotTaken = daySchedule
+                        .filter((o) => o.appointmentId !== item.appointmentId && o.date === item.date && o.equipment)
+                        .map((o) => o.equipment);
+                      return (
+                        <tr key={item.appointmentId}>
+                          <td style={{ whiteSpace: "nowrap" }}>{formatTime(item.date)}</td>
+                          <td>{item.patientName}</td>
+                          <td>
+                            <EquipmentSelect
+                              current={item.equipment}
+                              slotTaken={slotTaken}
+                              equipmentList={equipmentList}
+                              onChange={(eq) => handleEquipmentChange(item.appointmentId, eq)}
+                            />
+                          </td>
+                          <td style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                            {statusLabel(item.status)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Cards — mobile */}
+              <div className="mobile-cards">
+                {daySchedule.map((item) => {
+                  const slotTaken = daySchedule
+                    .filter((o) => o.appointmentId !== item.appointmentId && o.date === item.date && o.equipment)
+                    .map((o) => o.equipment);
+                  return (
+                    <div key={item.appointmentId} className="mobile-card">
+                      <div className="mobile-card__title" style={{ fontSize: "1.4rem" }}>
+                        {formatTime(item.date)}
+                      </div>
+                      <div className="mobile-card__field">
+                        <span className="mobile-card__label">Paciente:</span>
+                        <span>{item.patientName}</span>
+                      </div>
+                      <div className="mobile-card__field">
+                        <span className="mobile-card__label">Status:</span>
+                        <span style={{ color: "var(--text-secondary)" }}>{statusLabel(item.status)}</span>
+                      </div>
+                      <div className="mobile-card__actions">
+                        <EquipmentSelect
+                          current={item.equipment}
+                          slotTaken={slotTaken}
+                          equipmentList={equipmentList}
+                          onChange={(eq) => handleEquipmentChange(item.appointmentId, eq)}
+                          selectStyle={{
+                            width: "100%",
+                            minWidth: "unset",
+                            minHeight: "44px",
+                            padding: "0.65rem 0.9rem",
+                            borderRadius: "10px",
+                            fontSize: "0.9rem",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              </>
             )}
           </>
         )}
@@ -494,34 +540,70 @@ function AppointmentsContent() {
                           Sem aulas
                         </p>
                       ) : (
-                        <table style={{ margin: 0 }}>
-                          <thead>
-                            <tr>
-                              <th style={{ fontSize: "0.78rem" }}>Horário</th>
-                              <th style={{ fontSize: "0.78rem" }}>Paciente</th>
-                              <th style={{ fontSize: "0.78rem" }}>Equipamento</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {day.appointments.map((item) => (
-                              <tr key={item.appointmentId}>
-                                <td style={{ fontSize: "0.83rem", whiteSpace: "nowrap" }}>
-                                  {formatTime(item.date)}
-                                </td>
-                                <td style={{ fontSize: "0.83rem" }}>{item.patientName}</td>
-                                <td>
-                                  {item.noEquipmentAvailable ? (
-                                    <span style={{ color: "var(--danger)", fontSize: "0.75rem", fontWeight: 700 }}>
-                                      Sem equipamento
-                                    </span>
-                                  ) : (
-                                    <EquipmentBadge name={item.equipment} />
-                                  )}
-                                </td>
+                        <>
+                        {/* Tabela — desktop */}
+                        <div className="desktop-table">
+                          <table style={{ margin: 0 }}>
+                            <thead>
+                              <tr>
+                                <th style={{ fontSize: "0.78rem" }}>Horário</th>
+                                <th style={{ fontSize: "0.78rem" }}>Paciente</th>
+                                <th style={{ fontSize: "0.78rem" }}>Equipamento</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {day.appointments.map((item) => (
+                                <tr key={item.appointmentId}>
+                                  <td style={{ fontSize: "0.83rem", whiteSpace: "nowrap" }}>
+                                    {formatTime(item.date)}
+                                  </td>
+                                  <td style={{ fontSize: "0.83rem" }}>{item.patientName}</td>
+                                  <td>
+                                    {item.noEquipmentAvailable ? (
+                                      <span style={{ color: "var(--danger)", fontSize: "0.75rem", fontWeight: 700 }}>
+                                        Sem equipamento
+                                      </span>
+                                    ) : (
+                                      <EquipmentBadge name={item.equipment} />
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Lista compacta — mobile */}
+                        <div className="mobile-cards" style={{ margin: 0, gap: 0 }}>
+                          {day.appointments.map((item) => (
+                            <div
+                              key={item.appointmentId}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "0.65rem 1rem",
+                                borderTop: "1px solid var(--border)",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", flexShrink: 0 }}>
+                                {formatTime(item.date)}
+                              </span>
+                              <span style={{ fontSize: "0.85rem", flex: 1 }}>{item.patientName}</span>
+                              <div style={{ flexShrink: 0 }}>
+                                {item.noEquipmentAvailable ? (
+                                  <span style={{ color: "var(--danger)", fontSize: "0.75rem", fontWeight: 700 }}>
+                                    Sem equip.
+                                  </span>
+                                ) : (
+                                  <EquipmentBadge name={item.equipment} />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        </>
                       )}
                     </div>
                   );
@@ -583,41 +665,91 @@ function AppointmentsContent() {
       </div>
 
       {/* ── Lista completa ── */}
-      <table>
-        <thead>
-          <tr>
-            <th>Paciente</th>
-            <th>Data</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {appointments.map((a) => (
-            <tr key={a._id}>
-              <td>{a.patient?.name || "-"}</td>
-              <td>{new Date(a.date).toLocaleString("pt-BR")}</td>
-              <td>
-                <select
-                  value={a.status}
-                  onChange={(e) => handleStatusChange(a._id, e.target.value)}
-                  style={{ fontSize: "0.85rem" }}
-                >
-                  <option value="scheduled">Agendado</option>
-                  <option value="completed">Concluído</option>
-                  <option value="cancelled">Cancelado</option>
-                  <option value="no-show">Não compareceu</option>
-                </select>
-              </td>
-              <td>
-                <button className="btn btn--danger" onClick={() => handleDelete(a._id)}>
-                  Remover
-                </button>
-              </td>
+
+      {/* Tabela — desktop */}
+      <div className="desktop-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {appointments.map((a) => (
+              <tr key={a._id}>
+                <td>{a.patient?.name || "-"}</td>
+                <td>{new Date(a.date).toLocaleString("pt-BR")}</td>
+                <td>
+                  <select
+                    value={a.status}
+                    onChange={(e) => handleStatusChange(a._id, e.target.value)}
+                    style={{ fontSize: "0.85rem" }}
+                  >
+                    <option value="scheduled">Agendado</option>
+                    <option value="completed">Concluído</option>
+                    <option value="cancelled">Cancelado</option>
+                    <option value="no-show">Não compareceu</option>
+                  </select>
+                </td>
+                <td>
+                  <button className="btn btn--danger" onClick={() => handleDelete(a._id)}>
+                    Remover
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Cards — mobile */}
+      <div className="mobile-cards">
+        {appointments.map((a) => (
+          <div key={a._id} className="mobile-card">
+            <div className="mobile-card__title">
+              {new Date(a.date).toLocaleString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
+            <div className="mobile-card__field">
+              <span className="mobile-card__label">Paciente:</span>
+              <span>{a.patient?.name || "-"}</span>
+            </div>
+            <div className="mobile-card__actions">
+              <select
+                value={a.status}
+                onChange={(e) => handleStatusChange(a._id, e.target.value)}
+                style={{
+                  width: "100%",
+                  minHeight: "44px",
+                  padding: "0.65rem 0.9rem",
+                  border: "1px solid var(--border)",
+                  borderRadius: "10px",
+                  background: "#ffffff",
+                  color: "var(--text-primary)",
+                  fontSize: "0.9rem",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <option value="scheduled">Agendado</option>
+                <option value="completed">Concluído</option>
+                <option value="cancelled">Cancelado</option>
+                <option value="no-show">Não compareceu</option>
+              </select>
+              <button className="btn btn--danger" onClick={() => handleDelete(a._id)}>
+                Remover
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

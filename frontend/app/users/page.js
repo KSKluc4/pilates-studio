@@ -62,50 +62,95 @@ function UsersContent() {
 
       {error && <p className="error-text">{error}</p>}
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u._id}>
-              <td>{u.name}</td>
-              <td>{u.email}</td>
-              <td>{u.role}</td>
-              <td>{u.status === "active" ? "Ativo" : "Pendente"}</td>
-              <td>
-                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  {u.status === "pending" && (
-                    <>
-                      <select
-                        value={roleChoice[u._id] || "recepcionista"}
-                        onChange={(e) =>
-                          setRoleChoice({ ...roleChoice, [u._id]: e.target.value })
-                        }
-                      >
-                        <option value="recepcionista">Recepcionista</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                      <button className="btn btn--primary" onClick={() => handleApprove(u._id)}>
-                        Aprovar
-                      </button>
-                    </>
-                  )}
-                  <button className="btn btn--danger" onClick={() => handleDelete(u._id)}>
-                    Remover
-                  </button>
-                </div>
-              </td>
+      {/* Tabela — visível em telas médias e grandes */}
+      <div className="desktop-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Ações</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr key={u._id}>
+                <td>{u.name}</td>
+                <td>{u.email}</td>
+                <td>{u.role}</td>
+                <td>{u.status === "active" ? "Ativo" : "Pendente"}</td>
+                <td>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    {u.status === "pending" && (
+                      <>
+                        <select
+                          value={roleChoice[u._id] || "recepcionista"}
+                          onChange={(e) =>
+                            setRoleChoice({ ...roleChoice, [u._id]: e.target.value })
+                          }
+                        >
+                          <option value="recepcionista">Recepcionista</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        <button className="btn btn--primary" onClick={() => handleApprove(u._id)}>
+                          Aprovar
+                        </button>
+                      </>
+                    )}
+                    <button className="btn btn--danger" onClick={() => handleDelete(u._id)}>
+                      Remover
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Cards — visíveis apenas no mobile */}
+      <div className="mobile-cards">
+        {users.map((u) => (
+          <div key={u._id} className="mobile-card">
+            <div className="mobile-card__title">{u.name}</div>
+            <div className="mobile-card__field">
+              <span className="mobile-card__label">Email:</span>
+              <span>{u.email}</span>
+            </div>
+            <div className="mobile-card__field">
+              <span className="mobile-card__label">Role:</span>
+              <span>{u.role}</span>
+            </div>
+            <div className="mobile-card__field">
+              <span className="mobile-card__label">Status:</span>
+              <span>{u.status === "active" ? "Ativo" : "Pendente"}</span>
+            </div>
+            <div className="mobile-card__actions">
+              {u.status === "pending" && (
+                <>
+                  <select
+                    value={roleChoice[u._id] || "recepcionista"}
+                    onChange={(e) =>
+                      setRoleChoice({ ...roleChoice, [u._id]: e.target.value })
+                    }
+                  >
+                    <option value="recepcionista">Recepcionista</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <button className="btn btn--primary" onClick={() => handleApprove(u._id)}>
+                    Aprovar
+                  </button>
+                </>
+              )}
+              <button className="btn btn--danger" onClick={() => handleDelete(u._id)}>
+                Remover
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

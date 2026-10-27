@@ -1,6 +1,6 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const { login, register, signup, googleAuth, getMe, forgotPassword, resetPassword } = require("../controllers/authController");
+const { login, register, signup, getMe, forgotPassword, resetPassword } = require("../controllers/authController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -29,16 +29,6 @@ const registerLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Only requests from our own frontend server (NextAuth callback) carry this secret.
-function internalOnly(req, res, next) {
-  const secret = req.headers["x-internal-secret"];
-  if (!secret || secret !== process.env.INTERNAL_API_SECRET) {
-    res.status(401);
-    return next(new Error("Não autorizado."));
-  }
-  next();
-}
-
 const forgotPasswordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -50,7 +40,6 @@ const forgotPasswordLimiter = rateLimit({
 router.post("/login", loginLimiter, login);
 router.post("/signup", signupLimiter, signup);
 router.post("/register", registerLimiter, protect, authorize("admin"), register);
-router.post("/google", internalOnly, googleAuth);
 router.get("/me", protect, getMe);
 router.post("/forgot-password", forgotPasswordLimiter, forgotPassword);
 router.post("/reset-password", resetPassword);

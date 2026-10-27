@@ -41,14 +41,6 @@ export function AuthProvider({ children }) {
     return data.user;
   }
 
-  // Used to finish the Google sign-in bridge: NextAuth verifies the Google identity,
-  // our backend exchanges it for a JWT, and this stores that JWT the same way login() does.
-  function loginWithToken(newToken, newUser) {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    setUser(newUser);
-  }
-
   function logout() {
     localStorage.removeItem("token");
     setToken(null);
@@ -57,7 +49,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, loginWithToken, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

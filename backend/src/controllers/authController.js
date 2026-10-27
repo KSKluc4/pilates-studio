@@ -2,7 +2,6 @@ const crypto = require("crypto");
 const { Resend } = require("resend");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
-const { PRIMARY_ADMIN_EMAIL } = require("../utils/protectedAccounts");
 
 const SAFE_RESET_MESSAGE =
   "Se o email estiver cadastrado, você receberá um link de recuperação em breve.";
@@ -107,54 +106,6 @@ async function signup(req, res, next) {
 
     res.status(201).json({
       message: "Cadastro enviado. Aguarde a aprovação de um administrador.",
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-// Called server-side by the frontend's NextAuth callback after Google has verified the user.
-// Protected by a shared secret known only to our own servers (see the `internalOnly` middleware).
-async function googleAuth(req, res, next) {
-  try {
-    const { name, email } = req.body;
-
-    if (!name || !email) {
-      res.status(400);
-      throw new Error("Nome e email são obrigatórios.");
-    }
-
-    const normalizedEmail = email.toLowerCase();
-    let user = await User.findOne({ email: normalizedEmail });
-
-    if (!user) {
-      const isPrimaryAdmin = normalizedEmail === PRIMARY_ADMIN_EMAIL;
-      user = await User.create({
-        name,
-        email,
-        role: isPrimaryAdmin ? "admin" : "recepcionista",
-        status: isPrimaryAdmin ? "active" : "pending",
-        provider: "google",
-      });
-    }
-
-    if (user.status !== "active") {
-      return res.status(403).json({
-        message: "Sua conta ainda está pendente de aprovação por um administrador.",
-        pending: true,
-      });
-    }
-
-    const token = generateToken(user);
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
     });
   } catch (error) {
     next(error);
@@ -268,4 +219,4 @@ async function resetPassword(req, res, next) {
   }
 }
 
-module.exports = { login, register, signup, googleAuth, getMe, forgotPassword, resetPassword };
+module.exports = { login, register, signup, getMe, forgotPassword, resetPassword };

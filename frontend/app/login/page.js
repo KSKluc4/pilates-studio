@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn, signOut, useSession } from "next-auth/react";
 import { useAuth } from "../../context/AuthContext";
 
 export default function LoginPage() {
@@ -12,9 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [sessionMessage, setSessionMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [googleMessage, setGoogleMessage] = useState("");
-  const { login, loginWithToken } = useAuth();
-  const { data: session, status: sessionStatus } = useSession();
+  const { login } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -24,18 +21,6 @@ export default function LoginPage() {
       sessionStorage.removeItem("sessionMessage");
     }
   }, []);
-
-  useEffect(() => {
-    if (sessionStatus !== "authenticated" || !session) return;
-
-    if (session.backendToken) {
-      loginWithToken(session.backendToken, session.backendUser);
-      router.push("/dashboard");
-    } else if (session.pending) {
-      setGoogleMessage("Sua conta está pendente de aprovação por um administrador.");
-      signOut({ redirect: false });
-    }
-  }, [session, sessionStatus]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -103,21 +88,6 @@ export default function LoginPage() {
             {submitting ? "Entrando..." : "Entrar"}
           </button>
         </form>
-
-        <div style={{ margin: "1.25rem 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-          ou
-        </div>
-
-        <button
-          type="button"
-          className="btn btn--ghost"
-          style={{ width: "100%" }}
-          onClick={() => signIn("google")}
-        >
-          Entrar com Google
-        </button>
-
-        {googleMessage && <p className="error-text" style={{ marginTop: "1rem" }}>{googleMessage}</p>}
 
         <p style={{ marginTop: "1.5rem", fontSize: "0.9rem" }}>
           Não tem conta? <Link href="/signup">Cadastre-se</Link>
